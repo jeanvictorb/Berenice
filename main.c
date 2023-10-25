@@ -11,15 +11,15 @@ typedef struct
     int quant_vend;
 } Item;
 
-void RealizarVenda();
-void visualizarEstoque(Item tabela[], int tamanho);
+void RealizarVenda(tabela);
+void visualizarEstoque(tabela, contador);
 void Cadastroitem(Item tabela[], int *contador);
 void Visualizarprodutos(Item tabela[], int *contador);
 void attproduto(Item tabela[], int contador);
 void excluirproduto(Item tabela[], int *contador);
 void Lerprodutos(Item tabela[], int *contador);
+void saveFile(Item tabela[], int contador);
 void Relatoriovendas();
-void Venda();
 
 int contador = 5;
 
@@ -53,12 +53,13 @@ int main()
 
         case 2:
             system("cls");
-            // Venda();
+            RealizarVenda(tabela);
             break;
 
         case 3:
             system("cls");
             printf("Fechando o programa!\n");
+
             break;
 
         default:
@@ -103,11 +104,11 @@ void Visualizarprodutos(Item tabela[], int *contador)
             excluirproduto(tabela, contador);
             break;
         case 5:
-            saveFile();
+            saveFile(tabela, contador);
             break;
         case 6:
             system("cls");
-            // Lerprodutos(tabela, contador);
+            Lerprodutos(tabela, contador);
             break;
         case 7:
             system("cls");
@@ -238,6 +239,7 @@ void attproduto(Item tabela[], int contador)
         }
     }
 }
+
 void excluirproduto(Item tabela[], int *contador)
 {
     int codigo_editado;
@@ -261,7 +263,6 @@ void excluirproduto(Item tabela[], int *contador)
                 scanf("%s", excluir);
                 if (strcmp(excluir, "excluir") == 0)
                 {
-                    free(tabela[i]); // Libera a memória do contato a ser excluído
                     for (int j = i; j < contador - 1; j++)
                     {
                         contador[j] = contador[j + 1]; // Move os contatos restantes
@@ -290,21 +291,57 @@ void excluirproduto(Item tabela[], int *contador)
     }
 }
 
-void saveFile(){
-    File = *arq;
+void saveFile(Item tabela[], int contador)
+{
+    FILE *arq = fopen("produto.txt", "w");
+    if (arq == NULL)
+    {
+        printf("Erro ao abrir o arquivo.\n");
+        return;
+    }
 
+    for (int i = 0; i < contador; i++)
+    {
+        fprintf(arq, "%d,%s,%.2f,%d,%d\n", tabela[i].codigo, tabela[i].nome, tabela[i].valor, tabela[i].quantidade, tabela[i].quant_vend);
+    }
+
+    fclose(arq);
 }
-void RealizarVenda(struct Item *tabela, int tamanho)
+
+void Lerprodutos(Item tabela[], int *contador)
+{
+    FILE *arq = fopen("produto.txt", "r");
+    if (arq == NULL)
+    {
+        printf("Arquivo de estoque não encontrado.\n");
+        return;
+    }
+
+    *contador = 0;
+    while (fscanf(arq, "%d,%49[^,],%f,%d,%d", &tabela[*contador].codigo, tabela[*contador].nome, &tabela[*contador].valor, &tabela[*contador].quantidade, &tabela[*contador].quant_vend) == 5)
+    {
+        (*contador)++;
+        if (*contador == 100)
+        {
+            break;
+        }
+    }
+
+    fclose(arq);
+    printf("Produtos carregados com sucesso.\n");
+}
+
+void RealizarVenda(Item tabela)
 {
     int has_estoque = 0, quant_upt, keep_sell, qnt_parcela, porcentagem_desc, porcent_juros, opc_pagamento, verification, i, actionCode = 0, estoque_verificacao = 0, venda_quantidade[5] = {0, 0, 0, 0, 0}, qnt_item;
-    float valor_item, venda_total, vendas_totais, venda_total_juros, pagamento_recebido, valor_parcela, troco, max, subtotal, subtotal_item[5] = {0, 0, 0, 0, 0};
+    float valor_item, venda_total, *vendas_totais, venda_total_juros, pagamento_recebido, valor_parcela, troco, max, subtotal, subtotal_item[5] = {0, 0, 0, 0, 0};
     do
     {
-        // Seleciona um item valido
+
         i = 0;
         for (i = 0; i < 5; i++)
         {
-            if (tabela->quantidade <= 0)
+            if (tabela.quantidade <= 0)
             {
                 estoque_verificacao++;
 
@@ -317,11 +354,11 @@ void RealizarVenda(struct Item *tabela, int tamanho)
         }
         do
         {
-            visualizarEstoque(tabela);
+            visualizarEstoque(tabela, contador);
             printf("Digite qual item deseja vender\n");
-            scanf(" %d", &tabela->codigo);
-            tabela->codigo--;
-            if (tabela->codigo < 0 || tabela->codigo > 4)
+            scanf(" %d", &tabela.codigo);
+            tabela.codigo--;
+            if (tabela.codigo < 0 || tabela.codigo > 4)
             {
                 system("cls");
                 printf("Código invalido\n");
@@ -329,7 +366,7 @@ void RealizarVenda(struct Item *tabela, int tamanho)
             }
             else
             {
-                if (tabela->quantidade <= 0)
+                if (tabela.quantidade <= 0)
                 {
                     has_estoque = 0;
                 }
@@ -345,7 +382,7 @@ void RealizarVenda(struct Item *tabela, int tamanho)
                 }
             }
 
-        } while ((tabela->codigo < 0 || tabela->codigo > 4) || has_estoque == 0);
+        } while ((tabela.codigo < 0 || tabela.codigo > 4) || has_estoque == 0);
         // Seleciona uma quantidade valida
         do
         {
@@ -359,7 +396,7 @@ void RealizarVenda(struct Item *tabela, int tamanho)
             }
             else
             {
-                tabela->quantidade = tabela->quantidade - qnt_item;
+                tabela.quantidade = tabela.quantidade - qnt_item;
                 if (verification < 0)
                 {
                     printf("Estoque insuficiente, digite novamente\n");
@@ -368,14 +405,14 @@ void RealizarVenda(struct Item *tabela, int tamanho)
             }
         } while (qnt_item <= 0);
 
-        tabela->quantidade -= qnt_item;
+        tabela.quantidade -= qnt_item;
 
-        valor_item = tabela->valor;
-        subtotal = tabela->valor * qnt_item;
+        valor_item = tabela.valor;
+        subtotal = tabela.valor * qnt_item;
 
-        venda_quantidade[tabela->codigo] += qnt_item;
+        venda_quantidade[tabela.codigo] += qnt_item;
 
-        subtotal_item[tabela->codigo] += subtotal;
+        subtotal_item[tabela.codigo] += subtotal;
 
         venda_total += subtotal;
         do
@@ -401,7 +438,7 @@ void RealizarVenda(struct Item *tabela, int tamanho)
             {
                 if (venda_quantidade[i] > 0)
                 {
-                    printf("%d\t\t%s\t    R$ %.2f\t %d \tR$ %.2f\n", i + 1, tabela->nome, tabela->valor, tabela->quantidade, subtotal_item[i]);
+                    printf("%d\t\t%s\t    R$ %.2f\t %d \tR$ %.2f\n", i + 1, tabela.nome, tabela.valor, tabela.quantidade, subtotal_item[i]);
                 }
             }
             printf("\t\t\t\t\t\t Total\tR$ %.2f", venda_total);
@@ -419,7 +456,7 @@ void RealizarVenda(struct Item *tabela, int tamanho)
 
             printf("Deseja pagar a vista ou a prazo digite:\n");
             printf("Total da venda: RS %.2f\n", venda_total);
-            relatorioVendas(vendas_totais, venda_quantidade, tabela->nome, 0);
+            relatorioVendas(*vendas_totais, tabela);
             do
             {
 
@@ -514,4 +551,18 @@ void RealizarVenda(struct Item *tabela, int tamanho)
             }
         }
     } while (keep_sell != 2);
+}
+
+void RelatorioVendas(float *vendas_totais, Item tabela)
+{
+    system("cls");
+    printf("Relatorio de fechamento de caixa: \n");
+    printf("Item (codigo)\tNome do item\tQuantidade\nVendidos");
+    for (int i = 0; i < contador; i++)
+    {
+        if (vendas_totais[i] > 0)
+        {
+            printf("%d\t\t%s\t    %d\t\t%d", tabela[i].codigo, tabela[i].nome, tabela[i].quantidade, vendas_totais[i]);
+        }
+    }
 }
