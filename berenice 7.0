@@ -13,6 +13,7 @@ typedef struct
 Item *p;
 int contador = 5;
 
+
 int validador(int cod, Item tabela[], int contador);
 void RelatorioVendas(Item tabela[]);
 void visualizarEstoque(Item tabela[], int contador);
@@ -27,6 +28,9 @@ void sell();
 
 int main()
 {
+
+    p = (Item *)malloc((contador+1)*sizeof(Item));
+
     int opcao;
 
     Item tabela[100] = {
@@ -202,7 +206,8 @@ void Cadastroitem(Item tabela[], int *contador)
         }
         else if (opcao == 2)
         {
-            p=(tabela *)malloc(contador+1*sizeof(tabela));
+            p = (Item *)malloc((contador+1)*sizeof(Item));
+
             printf("\nQual produto deseja adicionar estoque (codigo do produto): ");
             scanf("%d", &cod);
             for (int i = 0; i < *contador; i++)
@@ -393,9 +398,9 @@ void Lerprodutos(Item tabela[], int *contador)
     }
     fscanf(pont_texto,"%d\n",&contador);
 
-    p = (tabela *)malloc(contador+1*sizeof(tabela));
+ //   p = (tabela *)malloc(contador+1*sizeof(tabela));
 
-    for(int i=0;i<contador,i++){
+    for(int i=0;i<contador;i++){
         fprintf(pont_texto, "%d,%s,%.2f,%d,%d\n", tabela[i].codigo, tabela[i].nome, tabela[i].valor, tabela[i].quantidade, tabela[i].quant_vend);
 
     }
