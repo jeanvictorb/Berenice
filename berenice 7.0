@@ -2,12 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <locale.h>
-#define nameLength 50
 typedef struct
 {
   int codigo;
-  char nome[nameLength];
+  char nome[50];
   float valor;
   int quantidade;
   int quant_vend;
@@ -16,15 +16,27 @@ Item *tabela;
 int contador = 5;
 
 int validador(int cod, Item tabela[]);
-void relatorioVendas(Item tabela[]);
 void cadastroitem(Item tabela[]);
 void visualizarEstoque(Item tabela[]);
 void atualziarProd(Item tabela[]);
 void excluirproduto(Item tabela[]);
 void lerprodutos();
-void salvarArquivo(Item tabela[]);
+void salvarArquivoBN(Item tabela[]);
 void relatorioVendas(Item tabela[]);
-void menuVendas();
+void menuVendas(Item tabela[]);
+void visualizarComanda(Item tabela[], int counter);
+void salvarArquivoBN(Item tabela[]);
+void salvarArquivoTXT(Item tabela[], int contador);
+void produtos(Item tabela[]);
+void realizarVenda(Item tabela[]);
+
+//FUNÇÕES UTILITARIAS
+void inputNum(int *var);
+void inputFloat(float *var);
+void inputNumRange(int *var, int minRange, int maxRange);
+void inputString(char *str); 
+void initializeDefaultItems();
+
 
 void initializeDefaultItems()
 {
@@ -32,36 +44,36 @@ void initializeDefaultItems()
   strcpy(tabela[0].nome, "pao de forma");
   tabela[0].valor = 7.50;
   tabela[0].quantidade = 10;
-  tabela[0].quant_vend = 1000;
+  tabela[0].quant_vend = NULL;
 
   tabela[1].codigo = 2;
   strcpy(tabela[1].nome, "pao de centeio");
   tabela[1].valor = 8.69;
   tabela[1].quantidade = 10;
-  tabela[1].quant_vend = 10;
+  tabela[1].quant_vend = NULL;
 
   tabela[2].codigo = 3;
   strcpy(tabela[2].nome, "broa de milho");
   tabela[2].valor = 5.00;
   tabela[2].quantidade = 10;
-  tabela[2].quant_vend = 100;
+  tabela[2].quant_vend = NULL;
 
   tabela[3].codigo = 4;
   strcpy(tabela[3].nome, "Sonho");
   tabela[3].valor = 4.50;
   tabela[3].quantidade = 10;
-  tabela[3].quant_vend = 100;
+  tabela[3].quant_vend = NULL;
 
   tabela[4].codigo = 5;
   strcpy(tabela[4].nome, "Tubaina");
   tabela[4].valor = 3.25;
   tabela[4].quantidade = 10;
-  tabela[4].quant_vend = 100;
+  tabela[4].quant_vend = NULL;
 }
 
 int main()
 {
-    setlocale(LC_ALL, "PORTUGUESE");
+  setlocale(LC_ALL, "PORTUGUESE");
   int opcao;
 
   tabela = (Item *)malloc(contador * sizeof(Item));
@@ -103,7 +115,6 @@ int main()
   return 0;
 }
 
-// FUNÇÕES UTILITARIAS
 void inputNum(int *var)
 {
   int validInput = 0;
@@ -119,7 +130,7 @@ void inputNum(int *var)
     }
     else
     {
-      if (*var < 1)
+      if (*var < 0)
       {
         // Clear input buffer
         *var = NULL;
@@ -143,7 +154,6 @@ void inputFloat(float *var)
   do
   {
     scanf("%f", var);
-    printf("\n Inside F; %f", *var);
     if (*var > 0)
     {
       validInput = 1;
@@ -191,7 +201,11 @@ void inputString(char *str)
 
     if (strlen(str) < 1)
     {
-      printf("\nString invalid. Please try again.\n");
+      printf("\nString invalida. Tente novamente:\n");
+    }
+    else if (strlen(str) > 25)
+    {
+      printf("\nString invalida. Tente novamente:\n");
     }
     else
     {
@@ -235,7 +249,7 @@ void produtos(Item tabela[])
       excluirproduto(tabela);
       break;
     case 5:
-      salvarArquivo(tabela);
+      salvarArquivoBN(tabela);
       break;
     case 6:
       system("cls");
@@ -255,10 +269,10 @@ void produtos(Item tabela[])
 void visualizarEstoque(Item tabela[])
 {
 
-  printf("Código\t| %-20s\t| Valor\t\t| Quantidade\t| Produtos Vendidos\n", "Nome");
+  printf("Código\t| %-20s\t| Valor\t\t| Quantidade\t\n", "Nome");
   for (int i = 0; i < contador; i++)
   {
-    printf("%d\t| %-20s\t| R$ %.2f\t| %d\t\t| %d\n", tabela[i].codigo, tabela[i].nome, tabela[i].valor, tabela[i].quantidade, tabela[i].quant_vend);
+    printf("%d\t| %-20s\t| R$ %.2f\t| %d\t\t\n", tabela[i].codigo, tabela[i].nome, tabela[i].valor, tabela[i].quantidade);
   }
   return;
 }
@@ -310,6 +324,7 @@ void cadastroitem(Item tabela[])
         {
           system("cls");
         }
+
         printf("\nProduto %d de %d novos produtos", i, new_items);
 
         // Cod item
@@ -331,13 +346,13 @@ void cadastroitem(Item tabela[])
         printf("\nNome do produto: ");
         inputString(&tabela[contador].nome);
 
-        printf("\nNome na tabela %s ", tabela[contador].nome);
+        printf("\nNome na tabela: %s ", tabela[contador].nome);
 
         //  Preco unidade
         printf("\nPreço unitario: ");
         inputFloat(&tabela[contador].valor);
 
-        printf("\nPreço na tabela: %.2f\n", tabela[contador].valor);
+        printf("\nPreço na tabela: %f\n", tabela[contador].valor);
 
         //  Quant item
         printf("\nQuantidade em estoque: ");
@@ -397,7 +412,7 @@ int validador(int cod, Item tabela[])
       return 1;
     }
   }
-  // Não existe nao tabela
+  // Não existe na tabela
   // Novo código válido
   return 0;
 }
@@ -499,7 +514,6 @@ void atualziarProd(Item tabela[])
 void excluirproduto(Item tabela[])
 {
   int codigo_editar;
-  char nome_close[100];
   int confirm;
   int verification;
   system("cls");
@@ -554,14 +568,14 @@ void excluirproduto(Item tabela[])
       }
       if (confirm == 2)
       {
-        printf("\nCancelado.\n");
+        printf("\nAção cancelada.\n");
         return;
       }
     }
   }
 }
 
-void salvarArquivo(Item tabela[])
+void salvarArquivoBN(Item tabela[])
 {
   FILE *file = fopen("produto.bin", "wb");
 
@@ -572,17 +586,17 @@ void salvarArquivo(Item tabela[])
   }
   else
   {
-    printf("\nCriou arquivo\n");
+    // printf("\nCriou arquivo\n");
   }
   fwrite(&contador, sizeof(int), 1, file);
 
   for (int i = 0; i < contador; i++)
   {
-    fwrite(&tabela[i].codigo, sizeof(int), 1, file);     // Write 'codigo' as binary (int)
-    fwrite(&tabela[i].nome, sizeof(char), 50, file);     // Write 'nome' as binary (char array)
-    fwrite(&tabela[i].valor, sizeof(float), 1, file);    // Write 'valor' as binary (float)
-    fwrite(&tabela[i].quantidade, sizeof(int), 1, file); // Write 'quantidade' as binary (int)
-    fwrite(&tabela[i].quant_vend, sizeof(int), 1, file); // Write 'quant_vend' as binary (int)
+    fwrite(&tabela[i].codigo, sizeof(int), 1, file);
+    fwrite(&tabela[i].nome, sizeof(char), 50, file);
+    fwrite(&tabela[i].valor, sizeof(float), 1, file);
+    fwrite(&tabela[i].quantidade, sizeof(int), 1, file);
+    fwrite(&tabela[i].quant_vend, sizeof(int), 1, file);
   }
 
   fclose(file);
@@ -599,7 +613,7 @@ void lerprodutos()
   }
   else
   {
-    printf("\nLeu o arquivo\n");
+    // printf("\nLeu o arquivo\n");
   }
 
   fread(&contador, sizeof(int), 1, file);
@@ -793,9 +807,9 @@ void realizarVenda(Item tabela[])
       }
       do
       {
+        printf("Digite o valor recebido para calcular o troco\n");
         printf("Desconto de %d%% aplicado a compra\n", porcentagem_desc);
         printf("Total com desconto: RS %.2f\n", venda_total);
-        printf("Digite o valor recebido para calcular o troco\n");
         inputFloat(&pagamento_recebido);
       } while (pagamento_recebido < venda_total);
 
@@ -817,7 +831,7 @@ void realizarVenda(Item tabela[])
       do
       {
         printf("Digite a quantidade de vezes que deseja parcelar\n");
-        scanf("%d", &qnt_parcela);
+        inputNum(&qnt_parcela);
         if (qnt_parcela <= 0)
         {
           system("cls");
@@ -846,21 +860,57 @@ void realizarVenda(Item tabela[])
       printf("Valor da parcela: RS%.2f\n", valor_parcela);
     }
   }
+
+  salvarArquivoTXT(carrinho, cart_size);
   free(carrinho);
   return;
 }
 
-void relatorioVendas(Item tabela[])
+void salvarArquivoTXT(Item tabela[], int contador)
 {
-  float *vendas_totais;
-  system("cls");
-  printf("Relatorio de fechamento de caixa: \n");
-  printf("Item (codigo)\tNome do item\tQuantidade\nVendidos");
+  time_t t = time(NULL);
+  struct tm tm = *localtime(&t);
+  char filename[22];
+
+  sprintf(filename, "%d-%02d-%02d_%02d-%02d-%02d.txt",
+          tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+          tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+  FILE *file = fopen(filename, "w");
+
+  if (file == NULL)
+  {
+    printf("Erro ao abrir o arquivo.\n");
+    return;
+  }
+  else
+  {
+    printf("\nCriou arquivo\n");
+  }
+  fprintf(file, "%d\n", contador);
+
   for (int i = 0; i < contador; i++)
   {
-    if (vendas_totais[i] > 0)
+    fprintf(file, "%d\n", tabela[i].codigo);
+    fprintf(file, "%s\n", tabela[i].nome);
+    fprintf(file, "%f\n", tabela[i].valor);
+    // quantidade vendida no carrinho
+    fprintf(file, "%d\n", tabela[i].quantidade);
+  }
+
+  fclose(file);
+}
+
+void relatorioVendas(Item tabela[])
+{
+  system("cls");
+  printf("Relatorio de Vendas: \n");
+  printf("Código\t| %-20s\t| Qnt. Estoque\t| Qnt. Vendido\n", "Nome");
+  for (int i = 0; i < contador; i++)
+  {
+    if (tabela[i].quant_vend > 0)
     {
-      printf("%d\t\t%s\t    %d\t\t%d", 50, tabela->nome, tabela->quantidade, vendas_totais[i]);
+      printf("%d\t| %-20s\t| %d\t\t| \t%d\t\n", tabela[i].codigo, tabela[i].nome, tabela[i].quantidade, tabela[i].quant_vend);
     }
   }
 }
